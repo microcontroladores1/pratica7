@@ -1,0 +1,239 @@
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 1
+
+
+
+
+
+       MCS-51 Family Macro Assembler   A S E M - 5 1   V 1.3
+       =====================================================
+
+
+
+	Source File:	temporizador.asm
+	Object File:	temporizador.hex
+	List File:	temporizador.lst
+
+
+
+ Line  I  Addr  Code            Source
+
+    1:				; Temporizador de rele
+    2:				; Programador: Francisco Edno
+    3:				;
+    4:				; No projeto o usuário poderar definir um tempo em minutos e segundos para
+    5:				; acionamento de uma carga (rele). A interface com usuario e por meio de
+    6:				; displays de 7 segmentos e 5 botoes (4 para configurar o tempo de acionamento
+    7:				; e 1 para iniciar a temporizacao).
+    8:
+    9:				; *****************************************************************************
+   10:				; INTERRUPCOES
+   11:				; *****************************************************************************
+   12:		N      0000	org     0000h
+   13:	  0000	02 00 0E	ljmp    _main
+   14:
+   15:		N      000B	org     000Bh
+   16:	  000B	02 00 21	ljmp    _tmr0
+   17:
+   18:				; *****************************************************************************
+   19:				; EQUATES
+   20:				; *****************************************************************************
+   21:		D      00A0	DISP    equ     p2
+   22:		B      00B4	D1      equ     p3.4
+   23:		B      00B5	D2      equ     p3.5
+   24:		N      EC78	T0REL   equ     -5000
+   25:
+   26:				; *****************************************************************************
+   27:				; Main
+   28:				; *****************************************************************************
+   29:	  000E	7B 19		_main:      mov     r3, #25
+   30:	  0010	75 89 01	            mov     tmod, #01h      ; timer 0, modo1
+   31:	  0013	D2 8C		            setb    tr0             ; liga o timer 0
+   32:	  0015	75 8A 78	            mov     tl0, #low T0REL ; delay de 5000 us
+   33:	  0018	75 8C EC	            mov     th0, #high T0REL; delay de 5000 us
+   34:	  001B	D2 AF		            setb    ea              ; habilita interrupcoes
+   35:	  001D	D2 A9		            setb    et0             ; habilitar interrupcao do timer 0
+   36:
+   37:	  001F	80 FE		            sjmp    $               ; aguarda as interrupcoes
+   38:
+   39:				; *****************************************************************************
+   40:				; ISR
+   41:				; *****************************************************************************
+   42:	  0021	B2 D5		_tmr0:      cpl     f0
+   43:	  0023	EB		            mov     a, r3
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 2
+
+
+
+ Line  I  Addr  Code            Source
+
+   44:	  0024	75 F0 0A	            mov     b, #10
+   45:	  0027	84		            div     ab
+   46:
+   47:	  0028	20 D5 0A	            jb      f0, _disp1
+   48:	  002B	C2 B5		            clr     d2
+   49:	  002D	D2 B4		            setb    d1
+   50:	  002F	E5 F0		            mov     a, b
+   51:	  0031	11 53		            acall   Display
+   52:	  0033	01 3B		            ajmp    _exit
+   53:
+   54:	  0035	C2 B4		_disp1:     clr     d1
+   55:	  0037	D2 B5		            setb    d2
+   56:	  0039	11 53		            acall   Display
+   57:
+   58:	  003B	C2 8D		_exit:      clr     tf0
+   59:	  003D	85 78 8A	            mov     tl0, low T0REL
+   60:	  0040	85 EC 8C	            mov     th0, high T0REL
+   61:
+   62:	  0043	32		            reti
+   63:
+   64:				; *****************************************************************************
+   65:				; SUB-ROTINAS
+   66:				; *****************************************************************************
+   67:
+   68:				; -----------------------------------------------------------------------------
+   69:				; LKDisp
+   70:				; -----------------------------------------------------------------------------
+   71:				; Decodifica o digito do ACC para o display de 7 segmentos. Retorna com
+   72:				; o valor no ACC.
+   73:				; -----------------------------------------------------------------------------
+   74:	  0044	90 00 49	LKDisp:     mov     dptr, #TABELA
+   75:	  0047	93		            movc    a, @a+dptr
+   76:	  0048	22		            ret
+   77:
+   78:	  0049	C0 F9 A4 B0	TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
+	  004D	99 92 82 F8
+	  0051	80 90
+   79:
+   80:				; -----------------------------------------------------------------------------
+   81:				; Display
+   82:				; -----------------------------------------------------------------------------
+   83:				; Imprime num display o digito no acumulador.
+   84:				; - Usa: LKDisp
+   85:				; -----------------------------------------------------------------------------
+   86:	  0053	11 44		Display:    acall   LKDisp
+   87:	  0055	F5 A0		            mov     DISP, a
+   88:	  0057	22		            ret
+   89:
+   90:				; *****************************************************************************
+   91:				            end
+   92:				; *****************************************************************************
+
+
+
+
+
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 3
+
+
+
+                     register banks used:  ---
+
+                     no errors
+
+
+
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 4
+
+
+
+
+
+	       L I S T   O F   S Y M B O L S
+	       =============================
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+??ASEM_51			  NUMBER    8051
+??VERSION			  NUMBER    0130
+AC				  BIT	      D6
+ACC				  DATA	      E0
+B				  DATA	      F0
+CY				  BIT	      D7
+D1				  NUMBER    00B4	  22
+D2				  NUMBER    00B5	  23
+DISP				  NUMBER    00A0	  21
+DISPLAY				  CODE	    0053	  86
+DPH				  DATA	      83
+DPL				  DATA	      82
+EA				  BIT	      AF
+ES				  BIT	      AC
+ET0				  BIT	      A9
+ET1				  BIT	      AB
+EX0				  BIT	      A8
+EX1				  BIT	      AA
+EXTI0				  CODE	    0003
+EXTI1				  CODE	    0013
+F0				  BIT	      D5
+IE				  DATA	      A8
+IE0				  BIT	      89
+IE1				  BIT	      8B
+INT0				  BIT	      B2
+INT1				  BIT	      B3
+IP				  DATA	      B8
+IT0				  BIT	      88
+IT1				  BIT	      8A
+LKDISP				  CODE	    0044	  74
+OV				  BIT	      D2
+P				  BIT	      D0
+P0				  DATA	      80
+P1				  DATA	      90
+P2				  DATA	      A0
+P3				  DATA	      B0
+PCON				  DATA	      87
+PS				  BIT	      BC
+PSW				  DATA	      D0
+PT0				  BIT	      B9
+PT1				  BIT	      BB
+PX0				  BIT	      B8
+PX1				  BIT	      BA
+RB8				  BIT	      9A
+RD				  BIT	      B7
+REN				  BIT	      9C
+RESET				  CODE	    0000
+RI				  BIT	      98
+RS0				  BIT	      D3
+RS1				  BIT	      D4
+
+ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 5
+
+
+
+SYMBOL				  TYPE     VALUE	LINE
+------------------------------------------------------------
+RXD				  BIT	      B0
+SBUF				  DATA	      99
+SCON				  DATA	      98
+SINT				  CODE	    0023
+SM0				  BIT	      9F
+SM1				  BIT	      9E
+SM2				  BIT	      9D
+SP				  DATA	      81
+T0				  BIT	      B4
+T0REL				  NUMBER    EC78	  24
+T1				  BIT	      B5
+TABELA				  CODE	    0049	  78
+TB8				  BIT	      9B
+TCON				  DATA	      88
+TF0				  BIT	      8D
+TF1				  BIT	      8F
+TH0				  DATA	      8C
+TH1				  DATA	      8D
+TI				  BIT	      99
+TIMER0				  CODE	    000B
+TIMER1				  CODE	    001B
+TL0				  DATA	      8A
+TL1				  DATA	      8B
+TMOD				  DATA	      89
+TR0				  BIT	      8C
+TR1				  BIT	      8E
+TXD				  BIT	      B1
+WR				  BIT	      B6
+_DISP1				  CODE	    0035	  54
+_EXIT				  CODE	    003B	  58
+_MAIN				  CODE	    000E	  29
+_TMR0				  CODE	    0021	  42

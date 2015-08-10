@@ -1,0 +1,47 @@
+,,,; Temporizador de rele
+,,,; Programador: Francisco Edno
+,,,;
+,,,; No projeto o usuário poderar definir um tempo em minutos e segundos para
+,,,; acionamento de uma carga (rele). A interface com usuario e por meio de
+,,,; displays de 7 segmentos e 5 botoes (4 para configurar o tempo de acionamento
+,,,; e 1 para iniciar a temporizacao).
+,,,
+,,,; *****************************************************************************
+,,,; INTERRUPCOES
+,,,; *****************************************************************************
+,,,org     0000h
+0000,02 00 0E,,ljmp    _main
+,,,
+,,,org     000Bh
+000B,02 00 1F,,ljmp    _tmr0
+,,,
+,,,; *****************************************************************************
+,,,; EQUATES
+,,,; *****************************************************************************
+000D,,,DISP    equ     p2
+000B,,,D1      equ     p3.4
+000B,,,D2      equ     p3.5
+,,,T0REL   equ     -5000
+,,,
+,,,; *****************************************************************************
+,,,; Main
+,,,; *****************************************************************************
+000E,75 89 01,_main,_main:      mov     tmod, #01h      ; timer 0, modo1
+0011,D2 8C,,            setb    tr0             ; liga o timer 0
+0013,75 8A 78,,            mov     tl0, #low T0REL ; delay de 5000 us
+0016,75 8C EC,,            mov     th0, #high T0REL; delay de 5000 us
+0019,D2 AF,,            setb    ea              ; habilita interrupcoes
+001B,D2 A9,,            setb    et0             ; habilitar interrupcao do timer 0
+,,,
+001D,80 FE,,            sjmp    $               ; aguarda as interrupcoes
+,,,
+,,,
+,,,; *****************************************************************************
+,,,; ISR
+,,,; *****************************************************************************
+001F,,_tmr0,_tmr0:
+001F,32,,            reti
+,,,
+,,,; *****************************************************************************
+000E,,,            end
+,,,; *****************************************************************************
