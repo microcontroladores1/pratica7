@@ -41,13 +41,13 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
    21:				; *****************************************************************************
    22:				; EQUATES
    23:				; *****************************************************************************
-   24:		D      00A0	DISP    equ     p2
-   25:		B      00B4	D1      equ     p3.4
-   26:		B      00B5	D2      equ     p3.5
-   27:		B      00B6	D3      equ     p3.6
-   28:		B      00B7	D4      equ     p3.7
-   29:		N      EC78	TMR     equ     -5000
-   30:		N      3CB0	TMR1    equ     -50000 ; Prepara para contagem de 50000us (0.05s)
+   24:		D      00A0	DISP    equ     p2      ; porta do display
+   25:		B      00B4	D1      equ     p3.4    ; habilita display 1
+   26:		B      00B5	D2      equ     p3.5    ; habilita display 2
+   27:		B      00B6	D3      equ     p3.6    ; habilita display 3
+   28:		B      00B7	D4      equ     p3.7    ; habilita display 4
+   29:		N      EC78	TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz
+   30:		N      3CB0	TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
    31:
    32:		N	 00	F1      bit     00h
    33:		N	 01	F2      bit     01h
@@ -80,50 +80,50 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
    53:				; *****************************************************************************
    54:
    55:				; -----------------------------------------------------------------------------
-   56:				; Timer 1
+   56:				; Timer 0
    57:				; -----------------------------------------------------------------------------
-   58:				; -----------------------------------------------------------------------------
-   59:	  002F	B2 01		_tmr0:      cpl     F2
-   60:
-   61:	  0031	20 01 04	            jb      F2, _min        ; F2 == 1?
-   62:	  0034	11 81		            acall   MuxSec          ; nao: multiplexa os segundos
-   63:	  0036	01 3A		            ajmp    _exit2          ; sai da ISR
-   64:
-   65:	  0038	11 66		_min:       acall   MuxMin          ; multiplexa os minutos
-   66:
-   67:	  003A	C2 8D		_exit2:     clr     tf0             ; limpa a flag de overflow
-   68:	  003C	75 8A 78	            mov     tl0, #low TMR   ; recarrega o timer com o byte baixo
-   69:	  003F	75 8C EC	            mov     th0, #high TMR  ; recarrega o timer com o byte superior
-   70:
-   71:	  0042	32		            reti                    ; retorna da ISR
-   72:
-   73:				; -----------------------------------------------------------------------------
+   58:				; Multiplexacao dos displays.
+   59:				; -----------------------------------------------------------------------------
+   60:	  002F	B2 01		_tmr0:      cpl     F2
+   61:
+   62:	  0031	20 01 04	            jb      F2, _min        ; F2 == 1?
+   63:	  0034	11 7F		            acall   MuxSec          ; nao: multiplexa os segundos
+   64:	  0036	01 3A		            ajmp    _exit2          ; sai da ISR
+   65:
+   66:	  0038	11 66		_min:       acall   MuxMin          ; multiplexa os minutos
+   67:
+   68:	  003A	C2 8D		_exit2:     clr     tf0             ; limpa a flag de overflow
+   69:	  003C	75 8A 78	            mov     tl0, #low TMR   ; recarrega o timer com o byte baixo
+   70:	  003F	75 8C EC	            mov     th0, #high TMR  ; recarrega o timer com o byte superior
+   71:
+   72:	  0042	32		            reti                    ; retorna da ISR
+   73:
    74:				; -----------------------------------------------------------------------------
-   75:				; -----------------------------------------------------------------------------
-   76:	  0043	C2 8F		_tmr1:      clr     tf1
-   77:	  0045	75 8B B0	            mov     tl1, #low TMR1
-   78:	  0048	75 8D 3C	            mov     th1, #high TMR1
-   79:
-   80:	  004B	32		            reti
-   81:
-   82:				; *****************************************************************************
-   83:				; SUB-ROTINAS
-   84:				; *****************************************************************************
-   85:
-   86:				; -----------------------------------------------------------------------------
-   87:				; ConfTMR
-   88:				; -----------------------------------------------------------------------------
-   89:				; Configura os Timers 0 e 1
-   90:				; -----------------------------------------------------------------------------
-   91:	  004C			ConfTMR:
-   92:	  004C	75 89 01	            mov     tmod, #01h  ; timer 0 e 1 no modo 1
-   93:	  004F	11 54		            acall   ConfigT0    ; configura timer 0
-   94:	  0051	11 5D		            acall   ConfigT1    ; configura timer 1
-   95:
-   96:	  0053	22		            ret
-   97:				; -----------------------------------------------------------------------------
-   98:				; ConfigT0
-   99:				; -----------------------------------------------------------------------------
+   75:				; Timer 1
+   76:				; -----------------------------------------------------------------------------
+   77:				; Contador de segundos.
+   78:				; -----------------------------------------------------------------------------
+   79:	  0043	C2 8F		_tmr1:      clr     tf1
+   80:	  0045	75 8B B0	            mov     tl1, #low TMR1
+   81:	  0048	75 8D 3C	            mov     th1, #high TMR1
+   82:
+   83:	  004B	32		            reti
+   84:
+   85:				; *****************************************************************************
+   86:				; SUB-ROTINAS
+   87:				; *****************************************************************************
+   88:
+   89:				; -----------------------------------------------------------------------------
+   90:				; ConfTMR
+   91:				; -----------------------------------------------------------------------------
+   92:				; Configura os Timers 0 e 1
+   93:				; - Usa: ConfigT0
+   94:				;        ConfigT1
+   95:				; -----------------------------------------------------------------------------
+   96:	  004C			ConfTMR:
+   97:	  004C	75 89 01	            mov     tmod, #01h  ; timer 0 e 1 no modo 1
+   98:	  004F	11 54		            acall   ConfigT0    ; configura timer 0
+   99:	  0051	11 5D		            acall   ConfigT1    ; configura timer 1
 
 ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 3
 
@@ -131,62 +131,62 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
 
  Line  I  Addr  Code            Source
 
-  100:				; Configura o timer 0
-  101:				; -----------------------------------------------------------------------------
-  102:	  0054	D2 8C		ConfigT0:   setb    tr0           ; liga o timer 0
-  103:	  0056	75 8A 78	            mov     tl0, #low TMR ; recarga do byte menor
-  104:	  0059	75 8C EC	            mov     th0, #high TMR; recarga do byte maior
-  105:
-  106:	  005C	22		            ret
-  107:
-  108:				; -----------------------------------------------------------------------------
-  109:				; ConfigT1
-  110:				; -----------------------------------------------------------------------------
-  111:				; Configura o timer 1
-  112:				; -----------------------------------------------------------------------------
-  113:	  005D	D2 8E		ConfigT1:   setb    tr1             ; liga o timer 1
-  114:	  005F	75 8B B0	            mov     tl1, #low TMR1  ; recarga do byte menor
-  115:	  0062	75 8D 3C	            mov     th1, #high TMR1 ; recarga do byte maior
-  116:
-  117:	  0065	22		            ret
-  118:
-  119:				; -----------------------------------------------------------------------------
-  120:				; MuxMin
-  121:				; -----------------------------------------------------------------------------
-  122:				; Multiplexa dois displays (D1 e D2), imprimindo o valor do R3 (Minutos).
-  123:				; - Registradores: R3
-  124:				; - Usa: Display
-  125:				; -----------------------------------------------------------------------------
-  126:	  0066	B2 D5		MuxMin:     cpl     f0          ; complementa flag de controle
-  127:	  0068	11 AE		            acall   Disable
-  128:
-  129:	  006A	EB		            mov     a, r3       ; a <- r3
-  130:	  006B	75 F0 0A	            mov     b, #10      ; prepara para separar unidade e dezena
-  131:	  006E	84		            div     ab          ; a <- dezenas | b <- unidade
-  132:
-  133:	  006F	20 D5 08	            jb      f0, _disp1  ; f0 == 1?
-  134:	  0072	C2 B5		            clr     D2          ; nao: Habilita d2
-  135:	  0074	E5 F0		            mov     a, b        ; acc <- b para botar no display
-  136:	  0076	11 A9		            acall   Display     ; imprime o valor do acc
-  137:	  0078	01 80		            ajmp    _exit       ; sai da rotina
-  138:
-  139:	  007A	C2 B4		_disp1:     clr     D1          ; habilita d1
-  140:	  007C	D2 B5		            setb    D2          ; desabilita d2
-  141:	  007E	11 A9		            acall   Display     ; imprime o valor do acc
-  142:
-  143:	  0080	22		_exit:      ret
-  144:
-  145:				; -----------------------------------------------------------------------------
-  146:				; MuxSec
-  147:				; -----------------------------------------------------------------------------
-  148:				; Multiplexa dois displays (D3 e D4), impimindo o valor do R4 (segundos).
-  149:				; - Registradores: R4
-  150:				; - Usa: Display
+  100:
+  101:	  0053	22		            ret
+  102:				; -----------------------------------------------------------------------------
+  103:				; ConfigT0
+  104:				; -----------------------------------------------------------------------------
+  105:				; Configura o timer 0
+  106:				; -----------------------------------------------------------------------------
+  107:	  0054	D2 8C		ConfigT0:   setb    tr0           ; liga o timer 0
+  108:	  0056	75 8A 78	            mov     tl0, #low TMR ; recarga do byte menor
+  109:	  0059	75 8C EC	            mov     th0, #high TMR; recarga do byte maior
+  110:
+  111:	  005C	22		            ret
+  112:
+  113:				; -----------------------------------------------------------------------------
+  114:				; ConfigT1
+  115:				; -----------------------------------------------------------------------------
+  116:				; Configura o timer 1
+  117:				; -----------------------------------------------------------------------------
+  118:	  005D	D2 8E		ConfigT1:   setb    tr1             ; liga o timer 1
+  119:	  005F	75 8B B0	            mov     tl1, #low TMR1  ; recarga do byte menor
+  120:	  0062	75 8D 3C	            mov     th1, #high TMR1 ; recarga do byte maior
+  121:
+  122:	  0065	22		            ret
+  123:
+  124:				; -----------------------------------------------------------------------------
+  125:				; MuxMin
+  126:				; -----------------------------------------------------------------------------
+  127:				; Multiplexa dois displays (D1 e D2), imprimindo o valor do R3 (Minutos).
+  128:				; - Registradores: R3
+  129:				; - Usa: Display
+  130:				; -----------------------------------------------------------------------------
+  131:	  0066	B2 D5		MuxMin:     cpl     f0          ; complementa flag de controle
+  132:	  0068	11 AC		            acall   Disable
+  133:
+  134:	  006A	EB		            mov     a, r3       ; a <- r3
+  135:	  006B	75 F0 0A	            mov     b, #10      ; prepara para separar unidade e dezena
+  136:	  006E	84		            div     ab          ; a <- dezenas | b <- unidade
+  137:
+  138:	  006F	20 D5 08	            jb      f0, _disp1  ; f0 == 1?
+  139:	  0072	C2 B5		            clr     D2          ; nao: Habilita d2
+  140:	  0074	E5 F0		            mov     a, b        ; acc <- b para botar no display
+  141:	  0076	11 A7		            acall   Display     ; imprime o valor do acc
+  142:	  0078	01 7E		            ajmp    _exit       ; sai da rotina
+  143:
+  144:	  007A	C2 B4		_disp1:     clr     D1          ; habilita d1
+  145:	  007C	11 A7		            acall   Display     ; imprime o valor do acc
+  146:
+  147:	  007E	22		_exit:      ret
+  148:
+  149:				; -----------------------------------------------------------------------------
+  150:				; MuxSec
   151:				; -----------------------------------------------------------------------------
-  152:	  0081	B2 00		MuxSec:     cpl     F1          ; complementa flag de controle
-  153:	  0083	11 AE		            acall   Disable
-  154:
-  155:	  0085	EC		            mov     a, r4       ; a <- r4
+  152:				; Multiplexa dois displays (D3 e D4), impimindo o valor do R4 (segundos).
+  153:				; - Registradores: R4
+  154:				; - Usa: Display
+  155:				; -----------------------------------------------------------------------------
 
 ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 4
 
@@ -194,64 +194,70 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
 
  Line  I  Addr  Code            Source
 
-  156:	  0086	75 F0 0A	            mov     b, #10      ; prepara para separar unidade e dezena
-  157:	  0089	84		            div     ab          ; a <- dezena | b <- unidade
+  156:	  007F	B2 00		MuxSec:     cpl     F1          ; complementa flag de controle
+  157:	  0081	11 AC		            acall   Disable
   158:
-  159:	  008A	20 00 08	            jb      F1, _disp3  ; F1 == 1?
-  160:	  008D	C2 B7		            clr     D4          ; nao: habilita d4
-  161:	  008F	E5 F0		            mov     a, b        ; acc <- b para botar no display
-  162:	  0091	11 A9		            acall   Display     ; imprime o valor do acc
-  163:	  0093	01 99		            ajmp    _exit1      ; sai da rotina
-  164:
-  165:	  0095	C2 B6		_disp3:     clr     D3          ; habilita d3
-  166:	  0097	11 A9		            acall   Display     ; imprime o valor do acc
-  167:
-  168:	  0099	22		_exit1:     ret
-  169:
-  170:				; -----------------------------------------------------------------------------
-  171:				; LKDisp
-  172:				; -----------------------------------------------------------------------------
-  173:				; Decodifica o digito do ACC para o display de 7 segmentos. Retorna com
-  174:				; o valor no ACC.
-  175:				; -----------------------------------------------------------------------------
-  176:	  009A	90 00 9F	LKDisp:     mov     dptr, #TABELA
-  177:	  009D	93		            movc    a, @a+dptr
-  178:	  009E	22		            ret
-  179:
-  180:	  009F	C0 F9 A4 B0	TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
-	  00A3	99 92 82 F8
-	  00A7	80 90
-  181:
-  182:				; -----------------------------------------------------------------------------
-  183:				; Display
-  184:				; -----------------------------------------------------------------------------
-  185:				; Imprime num display o digito no acumulador.
-  186:				; - Usa: LKDisp
-  187:				; -----------------------------------------------------------------------------
-  188:	  00A9	11 9A		Display:    acall   LKDisp
-  189:	  00AB	F5 A0		            mov     DISP, a
-  190:	  00AD	22		            ret
-  191:
-  192:				; -----------------------------------------------------------------------------
-  193:				; Disable
-  194:				; -----------------------------------------------------------------------------
-  195:				; Desabilita todos os displays
+  159:	  0083	EC		            mov     a, r4       ; a <- r4
+  160:	  0084	75 F0 0A	            mov     b, #10      ; prepara para separar unidade e dezena
+  161:	  0087	84		            div     ab          ; a <- dezena | b <- unidade
+  162:
+  163:	  0088	20 00 08	            jb      F1, _disp3  ; F1 == 1?
+  164:	  008B	C2 B7		            clr     D4          ; nao: habilita d4
+  165:	  008D	E5 F0		            mov     a, b        ; acc <- b para botar no display
+  166:	  008F	11 A7		            acall   Display     ; imprime o valor do acc
+  167:	  0091	01 97		            ajmp    _exit1      ; sai da rotina
+  168:
+  169:	  0093	C2 B6		_disp3:     clr     D3          ; habilita d3
+  170:	  0095	11 A7		            acall   Display     ; imprime o valor do acc
+  171:
+  172:	  0097	22		_exit1:     ret
+  173:
+  174:				; -----------------------------------------------------------------------------
+  175:				; LKDisp
+  176:				; -----------------------------------------------------------------------------
+  177:				; Decodifica o digito do ACC para o display de 7 segmentos. Retorna com
+  178:				; o valor no ACC.
+  179:				; -----------------------------------------------------------------------------
+  180:	  0098	90 00 9D	LKDisp:     mov     dptr, #TABELA
+  181:	  009B	93		            movc    a, @a+dptr
+  182:	  009C	22		            ret
+  183:
+  184:	  009D	C0 F9 A4 B0	TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
+	  00A1	99 92 82 F8
+	  00A5	80 90
+  185:
+  186:				; -----------------------------------------------------------------------------
+  187:				; Display
+  188:				; -----------------------------------------------------------------------------
+  189:				; Imprime num display o digito no acumulador.
+  190:				; - Usa: LKDisp
+  191:				; -----------------------------------------------------------------------------
+  192:	  00A7	11 98		Display:    acall   LKDisp
+  193:	  00A9	F5 A0		            mov     DISP, a
+  194:	  00AB	22		            ret
+  195:
   196:				; -----------------------------------------------------------------------------
-  197:	  00AE	D2 B4		Disable:    setb    D1
-  198:	  00B0	D2 B5		            setb    D2
-  199:	  00B2	D2 B6		            setb    D3
-  200:	  00B4	D2 B7		            setb    D4
-  201:
-  202:	  00B6	22		            ret
-  203:
-  204:				; *****************************************************************************
-  205:				            end
-  206:				; *****************************************************************************
-
-
-
+  197:				; Disable
+  198:				; -----------------------------------------------------------------------------
+  199:				; Desabilita todos os displays
+  200:				; -----------------------------------------------------------------------------
+  201:	  00AC	D2 B4		Disable:    setb    D1
+  202:	  00AE	D2 B5		            setb    D2
+  203:	  00B0	D2 B6		            setb    D3
+  204:	  00B2	D2 B7		            setb    D4
+  205:
+  206:	  00B4	22		            ret
+  207:
+  208:				; *****************************************************************************
+  209:				            end
 
 ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 5
+
+
+
+ Line  I  Addr  Code            Source
+
+  210:				; *****************************************************************************
 
 
 
@@ -281,17 +287,17 @@ SYMBOL				  TYPE     VALUE	LINE
 AC				  BIT	      D6
 ACC				  DATA	      E0
 B				  DATA	      F0
-CONFIGT0			  CODE	    0054	 102
-CONFIGT1			  CODE	    005D	 113
-CONFTMR				  CODE	    004C	  91
+CONFIGT0			  CODE	    0054	 107
+CONFIGT1			  CODE	    005D	 118
+CONFTMR				  CODE	    004C	  96
 CY				  BIT	      D7
 D1				  NUMBER    00B4	  25
 D2				  NUMBER    00B5	  26
 D3				  NUMBER    00B6	  27
 D4				  NUMBER    00B7	  28
-DISABLE				  CODE	    00AE	 197
+DISABLE				  CODE	    00AC	 201
 DISP				  NUMBER    00A0	  24
-DISPLAY				  CODE	    00A9	 188
+DISPLAY				  CODE	    00A7	 192
 DPH				  DATA	      83
 DPL				  DATA	      82
 EA				  BIT	      AF
@@ -313,9 +319,9 @@ INT1				  BIT	      B3
 IP				  DATA	      B8
 IT0				  BIT	      88
 IT1				  BIT	      8A
-LKDISP				  CODE	    009A	 176
-MUXMIN				  CODE	    0066	 126
-MUXSEC				  CODE	    0081	 152
+LKDISP				  CODE	    0098	 180
+MUXMIN				  CODE	    0066	 131
+MUXSEC				  CODE	    007F	 156
 OV				  BIT	      D2
 P				  BIT	      D0
 P0				  DATA	      80
@@ -353,7 +359,7 @@ SM2				  BIT	      9D
 SP				  DATA	      81
 T0				  BIT	      B4
 T1				  BIT	      B5
-TABELA				  CODE	    009F	 180
+TABELA				  CODE	    009D	 184
 TB8				  BIT	      9B
 TCON				  DATA	      88
 TF0				  BIT	      8D
@@ -372,12 +378,12 @@ TR0				  BIT	      8C
 TR1				  BIT	      8E
 TXD				  BIT	      B1
 WR				  BIT	      B6
-_DISP1				  CODE	    007A	 139
-_DISP3				  CODE	    0095	 165
-_EXIT				  CODE	    0080	 143
-_EXIT1				  CODE	    0099	 168
-_EXIT2				  CODE	    003A	  67
+_DISP1				  CODE	    007A	 144
+_DISP3				  CODE	    0093	 169
+_EXIT				  CODE	    007E	 147
+_EXIT1				  CODE	    0097	 172
+_EXIT2				  CODE	    003A	  68
 _MAIN				  CODE	    001E	  38
-_MIN				  CODE	    0038	  65
-_TMR0				  CODE	    002F	  59
-_TMR1				  CODE	    0043	  76
+_MIN				  CODE	    0038	  66
+_TMR0				  CODE	    002F	  60
+_TMR1				  CODE	    0043	  79

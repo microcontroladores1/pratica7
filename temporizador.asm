@@ -21,13 +21,13 @@ ljmp    _tmr1
 ; *****************************************************************************
 ; EQUATES
 ; *****************************************************************************
-DISP    equ     p2
-D1      equ     p3.4
-D2      equ     p3.5
-D3      equ     p3.6
-D4      equ     p3.7
-TMR     equ     -5000
-TMR1    equ     -50000 ; Prepara para contagem de 50000us (0.05s)
+DISP    equ     p2      ; porta do display
+D1      equ     p3.4    ; habilita display 1
+D2      equ     p3.5    ; habilita display 2
+D3      equ     p3.6    ; habilita display 3
+D4      equ     p3.7    ; habilita display 4
+TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz
+TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
 
 F1      bit     00h
 F2      bit     01h
@@ -53,8 +53,9 @@ _main:      mov     r3, #01       ; registrador que indica os minutos
 ; *****************************************************************************
 
 ; -----------------------------------------------------------------------------
-; Timer 1
+; Timer 0
 ; -----------------------------------------------------------------------------
+; Multiplexacao dos displays.
 ; -----------------------------------------------------------------------------
 _tmr0:      cpl     F2
 
@@ -73,7 +74,7 @@ _exit2:     clr     tf0             ; limpa a flag de overflow
 ; -----------------------------------------------------------------------------
 ; Timer 1
 ; -----------------------------------------------------------------------------
-; Contador
+; Contador de segundos.
 ; -----------------------------------------------------------------------------
 _tmr1:      clr     tf1
             mov     tl1, #low TMR1
@@ -89,6 +90,8 @@ _tmr1:      clr     tf1
 ; ConfTMR
 ; -----------------------------------------------------------------------------
 ; Configura os Timers 0 e 1
+; - Usa: ConfigT0
+;        ConfigT1
 ; -----------------------------------------------------------------------------
 ConfTMR:
             mov     tmod, #01h  ; timer 0 e 1 no modo 1
@@ -139,7 +142,6 @@ MuxMin:     cpl     f0          ; complementa flag de controle
             ajmp    _exit       ; sai da rotina
 
 _disp1:     clr     D1          ; habilita d1
-            setb    D2          ; desabilita d2
             acall   Display     ; imprime o valor do acc
 
 _exit:      ret

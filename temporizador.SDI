@@ -53,13 +53,13 @@
 ,,,; *****************************************************************************
 ,,,
 ,,,; -----------------------------------------------------------------------------
-,,,; Timer 1
+,,,; Timer 0
 ,,,; -----------------------------------------------------------------------------
 ,,,; -----------------------------------------------------------------------------
 002F,B2 01,_tmr0,_tmr0:      cpl     F2
 ,,,
 0031,20 01 04,,            jb      F2, _min        ; F2 == 1?
-0034,11 81,,            acall   MuxSec          ; nao: multiplexa os segundos
+0034,11 7F,,            acall   MuxSec          ; nao: multiplexa os segundos
 0036,01 3A,,            ajmp    _exit2          ; sai da ISR
 ,,,
 0038,11 66,_min,_min:       acall   MuxMin          ; multiplexa os minutos
@@ -71,7 +71,9 @@
 0042,32,,            reti                    ; retorna da ISR
 ,,,
 ,,,; -----------------------------------------------------------------------------
+,,,; Timer 1
 ,,,; -----------------------------------------------------------------------------
+,,,; Contador
 ,,,; -----------------------------------------------------------------------------
 0043,C2 8F,_tmr1,_tmr1:      clr     tf1
 0045,75 8B B0,,            mov     tl1, #low TMR1
@@ -124,7 +126,7 @@
 ,,,; - Usa: Display
 ,,,; -----------------------------------------------------------------------------
 0066,B2 D5,MuxMin,MuxMin:     cpl     f0          ; complementa flag de controle
-0068,11 AE,,            acall   Disable
+0068,11 AC,,            acall   Disable
 ,,,
 006A,EB,,            mov     a, r3       ; a <- r3
 006B,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
@@ -133,14 +135,13 @@
 006F,20 D5 08,,            jb      f0, _disp1  ; f0 == 1?
 0072,C2 B5,,            clr     D2          ; nao: Habilita d2
 0074,E5 F0,,            mov     a, b        ; acc <- b para botar no display
-0076,11 A9,,            acall   Display     ; imprime o valor do acc
-0078,01 80,,            ajmp    _exit       ; sai da rotina
+0076,11 A7,,            acall   Display     ; imprime o valor do acc
+0078,01 7E,,            ajmp    _exit       ; sai da rotina
 ,,,
 007A,C2 B4,_disp1,_disp1:     clr     D1          ; habilita d1
-007C,D2 B5,,            setb    D2          ; desabilita d2
-007E,11 A9,,            acall   Display     ; imprime o valor do acc
+007C,11 A7,,            acall   Display     ; imprime o valor do acc
 ,,,
-0080,22,_exit,_exit:      ret
+007E,22,_exit,_exit:      ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; MuxSec
@@ -149,23 +150,23 @@
 ,,,; - Registradores: R4
 ,,,; - Usa: Display
 ,,,; -----------------------------------------------------------------------------
-0081,B2 00,MuxSec,MuxSec:     cpl     F1          ; complementa flag de controle
-0083,11 AE,,            acall   Disable
+007F,B2 00,MuxSec,MuxSec:     cpl     F1          ; complementa flag de controle
+0081,11 AC,,            acall   Disable
 ,,,
-0085,EC,,            mov     a, r4       ; a <- r4
-0086,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
-0089,84,,            div     ab          ; a <- dezena | b <- unidade
+0083,EC,,            mov     a, r4       ; a <- r4
+0084,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
+0087,84,,            div     ab          ; a <- dezena | b <- unidade
 ,,,
-008A,20 00 08,,            jb      F1, _disp3  ; F1 == 1?
-008D,C2 B7,,            clr     D4          ; nao: habilita d4
-008F,E5 F0,,            mov     a, b        ; acc <- b para botar no display
-0091,11 A9,,            acall   Display     ; imprime o valor do acc
-0093,01 99,,            ajmp    _exit1      ; sai da rotina
+0088,20 00 08,,            jb      F1, _disp3  ; F1 == 1?
+008B,C2 B7,,            clr     D4          ; nao: habilita d4
+008D,E5 F0,,            mov     a, b        ; acc <- b para botar no display
+008F,11 A7,,            acall   Display     ; imprime o valor do acc
+0091,01 97,,            ajmp    _exit1      ; sai da rotina
 ,,,
-0095,C2 B6,_disp3,_disp3:     clr     D3          ; habilita d3
-0097,11 A9,,            acall   Display     ; imprime o valor do acc
+0093,C2 B6,_disp3,_disp3:     clr     D3          ; habilita d3
+0095,11 A7,,            acall   Display     ; imprime o valor do acc
 ,,,
-0099,22,_exit1,_exit1:     ret
+0097,22,_exit1,_exit1:     ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; LKDisp
@@ -173,11 +174,11 @@
 ,,,; Decodifica o digito do ACC para o display de 7 segmentos. Retorna com
 ,,,; o valor no ACC.
 ,,,; -----------------------------------------------------------------------------
-009A,90 00 9F,LKDisp,LKDisp:     mov     dptr, #TABELA
-009D,93,,            movc    a, @a+dptr
-009E,22,,            ret
+0098,90 00 9D,LKDisp,LKDisp:     mov     dptr, #TABELA
+009B,93,,            movc    a, @a+dptr
+009C,22,,            ret
 ,,,
-009F,C0 F9 A4 B0,TABELA,TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
+009D,C0 F9 A4 B0,TABELA,TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Display
@@ -185,21 +186,21 @@
 ,,,; Imprime num display o digito no acumulador.
 ,,,; - Usa: LKDisp
 ,,,; -----------------------------------------------------------------------------
-00A9,11 9A,Display,Display:    acall   LKDisp
-00AB,F5 A0,,            mov     DISP, a
-00AD,22,,            ret
+00A7,11 98,Display,Display:    acall   LKDisp
+00A9,F5 A0,,            mov     DISP, a
+00AB,22,,            ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Disable
 ,,,; -----------------------------------------------------------------------------
 ,,,; Desabilita todos os displays
 ,,,; -----------------------------------------------------------------------------
-00AE,D2 B4,Disable,Disable:    setb    D1
-00B0,D2 B5,,            setb    D2
-00B2,D2 B6,,            setb    D3
-00B4,D2 B7,,            setb    D4
+00AC,D2 B4,Disable,Disable:    setb    D1
+00AE,D2 B5,,            setb    D2
+00B0,D2 B6,,            setb    D3
+00B2,D2 B7,,            setb    D4
 ,,,
-00B6,22,,            ret
+00B4,22,,            ret
 ,,,
 ,,,; *****************************************************************************
 000E,,,            end
