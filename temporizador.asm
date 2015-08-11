@@ -15,6 +15,9 @@ ljmp    _main
 org     000Bh
 ljmp    _tmr0
 
+org     001Bh
+ljmp    _tmr1
+
 ; *****************************************************************************
 ; EQUATES
 ; *****************************************************************************
@@ -24,6 +27,7 @@ D2      equ     p3.5
 D3      equ     p3.6
 D4      equ     p3.7
 TMR     equ     -5000
+TMR1    equ     -50000 ; Prepara para contagem de 50000us (0.05s)
 
 F1      bit     00h
 F2      bit     01h
@@ -31,37 +35,88 @@ F2      bit     01h
 ; *****************************************************************************
 ; Main
 ; *****************************************************************************
-_main:      mov     r3, #95
-            mov     r4, #33
-            mov     tmod, #01h    ; timer 0, modo1
-            setb    tr0           ; liga o timer 0
-            mov     tl0, #low TMR ; delay de 5000 us
-            mov     th0, #high TMR; delay de 5000 us
+_main:      mov     r3, #01       ; registrador que indica os minutos
+            mov     r4, #33       ; registrador que indica os segundos
+
+            mov     sp, #2fh      ; muda o stack pointer
+
+            acall   ConfTMR       ; configura os timers 0 e 1
+
             setb    ea            ; habilita interrupcoes
-            setb    et0           ; habilitar interrupcao do timer 0
+            setb    et0           ; habilita interrupcao do timer 0
+            setb    et1           ; habilita interrupcao do timer 1
             
             sjmp    $             ; aguarda as interrupcoes
 
 ; *****************************************************************************
 ; ISR
 ; *****************************************************************************
+
+; -----------------------------------------------------------------------------
+; Timer 1
+; -----------------------------------------------------------------------------
+; -----------------------------------------------------------------------------
 _tmr0:      cpl     F2
 
             jb      F2, _min        ; F2 == 1?
-            acall   MuxSec
-            ajmp    _exit2
+            acall   MuxSec          ; nao: multiplexa os segundos
+            ajmp    _exit2          ; sai da ISR
 
-_min:       acall   MuxMin
+_min:       acall   MuxMin          ; multiplexa os minutos
 
-_exit2:     clr     tf0
-            mov     tl0, #low TMR
-            mov     th0, #high TMR
+_exit2:     clr     tf0             ; limpa a flag de overflow
+            mov     tl0, #low TMR   ; recarrega o timer com o byte baixo
+            mov     th0, #high TMR  ; recarrega o timer com o byte superior
+
+            reti                    ; retorna da ISR
+
+; -----------------------------------------------------------------------------
+; Timer 1
+; -----------------------------------------------------------------------------
+; Contador
+; -----------------------------------------------------------------------------
+_tmr1:      clr     tf1
+            mov     tl1, #low TMR1
+            mov     th1, #high TMR1
 
             reti
 
 ; *****************************************************************************
 ; SUB-ROTINAS
 ; *****************************************************************************
+
+; -----------------------------------------------------------------------------
+; ConfTMR
+; -----------------------------------------------------------------------------
+; Configura os Timers 0 e 1
+; -----------------------------------------------------------------------------
+ConfTMR:
+            mov     tmod, #01h  ; timer 0 e 1 no modo 1
+            acall   ConfigT0    ; configura timer 0
+            acall   ConfigT1    ; configura timer 1
+
+            ret
+; -----------------------------------------------------------------------------
+; ConfigT0
+; -----------------------------------------------------------------------------
+; Configura o timer 0
+; -----------------------------------------------------------------------------
+ConfigT0:   setb    tr0           ; liga o timer 0
+            mov     tl0, #low TMR ; recarga do byte menor
+            mov     th0, #high TMR; recarga do byte maior
+
+            ret
+
+; -----------------------------------------------------------------------------
+; ConfigT1
+; -----------------------------------------------------------------------------
+; Configura o timer 1
+; -----------------------------------------------------------------------------
+ConfigT1:   setb    tr1             ; liga o timer 1
+            mov     tl1, #low TMR1  ; recarga do byte menor
+            mov     th1, #high TMR1 ; recarga do byte maior
+
+            ret
 
 ; -----------------------------------------------------------------------------
 ; MuxMin
