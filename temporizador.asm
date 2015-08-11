@@ -26,7 +26,7 @@ D1      equ     p3.4    ; habilita display 1
 D2      equ     p3.5    ; habilita display 2
 D3      equ     p3.6    ; habilita display 3
 D4      equ     p3.7    ; habilita display 4
-TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz
+TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
 TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
 
 F1      bit     00h
@@ -36,7 +36,8 @@ F2      bit     01h
 ; Main
 ; *****************************************************************************
 _main:      mov     r3, #01       ; registrador que indica os minutos
-            mov     r4, #33       ; registrador que indica os segundos
+            mov     r4, #03       ; registrador que indica os segundos
+            mov     r5, #-20      ; valor de recarrega para segundos
 
             mov     sp, #2fh      ; muda o stack pointer
 
@@ -75,8 +76,15 @@ _exit2:     clr     tf0             ; limpa a flag de overflow
 ; Timer 1
 ; -----------------------------------------------------------------------------
 ; Contador de segundos.
+; - Registradores: r5
 ; -----------------------------------------------------------------------------
-_tmr1:      clr     tf1
+_tmr1:      inc     r5              ; incrementa r5
+            cjne    r5, #0, _exit3  ; se ocorreu overflow, um segundo se passou
+
+_sec:       acall   Second          ; chama rotina de segundo
+            mov     r5, #-20        ; recarrega r5
+            
+_exit3:     clr     tf1
             mov     tl1, #low TMR1
             mov     th1, #high TMR1
 
@@ -203,6 +211,34 @@ Disable:    setb    D1
             setb    D3
             setb    D4
 
+            ret
+
+; -----------------------------------------------------------------------------
+; Second
+; -----------------------------------------------------------------------------
+; Chamada a cada um segundo
+; -----------------------------------------------------------------------------
+Second:     dec     r4
+            cjne    r4, #0FFh, _exit4   ; ocorreu underflow?
+
+            dec     r3                  ; sim: decrementa os minutos
+            cjne    r3, #0FFh, _label   ; ocorreu underflow nos minutos?
+
+            clr     tr1                 ; sim: para o timer 1
+            mov     r3, #0              ; zera os minutos
+            mov     r4, #0              ; zera os segundos
+            acall   Break               ; Timer finalizado.
+            ajmp    _exit4              ; sai da rotina
+
+_label:     mov     r4, #59             
+_exit4:     ret
+
+; -----------------------------------------------------------------------------
+; Break
+; -----------------------------------------------------------------------------
+; Rotina a ser chamada quando a contagem finaliza.
+; -----------------------------------------------------------------------------
+Break:      
             ret
 
 ; *****************************************************************************
