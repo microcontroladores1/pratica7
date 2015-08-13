@@ -27,7 +27,7 @@ D2      equ     p3.5    ; habilita display 2
 D3      equ     p3.6    ; habilita display 3
 D4      equ     p3.7    ; habilita display 4
 TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
-TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
+TMR1    equ     15536  ; Prepara para contagem de 50000us (0.05s)
 
 F1      bit     00h
 F2      bit     01h
@@ -35,9 +35,11 @@ F2      bit     01h
 ; *****************************************************************************
 ; Main
 ; *****************************************************************************
-_main:      mov     r3, #01       ; registrador que indica os minutos
-            mov     r4, #03       ; registrador que indica os segundos
-            mov     r5, #-20      ; valor de recarrega para segundos
+_main:      mov     r3, #20       ; registrador que indica os minutos
+            mov     r4, #00      ; registrador que indica os segundos
+            mov     r5, #00     ; valor de recarrega para segundos
+
+            acall   Disable
 
             mov     sp, #2fh      ; muda o stack pointer
 
@@ -67,8 +69,7 @@ _tmr0:      cpl     F2
 _min:       acall   MuxMin          ; multiplexa os minutos
 
 _exit2:     clr     tf0             ; limpa a flag de overflow
-            mov     tl0, #low TMR   ; recarrega o timer com o byte baixo
-            mov     th0, #high TMR  ; recarrega o timer com o byte superior
+            acall   ConfigT0
 
             reti                    ; retorna da ISR
 
@@ -78,16 +79,14 @@ _exit2:     clr     tf0             ; limpa a flag de overflow
 ; Contador de segundos.
 ; - Registradores: r5
 ; -----------------------------------------------------------------------------
-_tmr1:      inc     r5              ; incrementa r5
-            cjne    r5, #0, _exit3  ; se ocorreu overflow, um segundo se passou
+_tmr1:      inc     r5               ; incrementa r5
+            cjne    r5, #20, _exit3  ; se ocorreu overflow, um segundo se passou
 
 _sec:       acall   Second          ; chama rotina de segundo
-            mov     r5, #-20        ; recarrega r5
+            mov     r5, #00       ; recarrega r5
             
 _exit3:     clr     tf1
-            mov     tl1, #low TMR1
-            mov     th1, #high TMR1
-
+            acall   ConfigT1
             reti
 
 ; *****************************************************************************
@@ -102,7 +101,10 @@ _exit3:     clr     tf1
 ;        ConfigT1
 ; -----------------------------------------------------------------------------
 ConfTMR:
-            mov     tmod, #01h  ; timer 0 e 1 no modo 1
+            mov     tmod, #11h  ; timer 0 e 1 no modo 1
+            setb    tr0         ; liga timer 0
+            setb    tr1         ; liga timer 1
+
             acall   ConfigT0    ; configura timer 0
             acall   ConfigT1    ; configura timer 1
 
@@ -112,8 +114,7 @@ ConfTMR:
 ; -----------------------------------------------------------------------------
 ; Configura o timer 0
 ; -----------------------------------------------------------------------------
-ConfigT0:   setb    tr0           ; liga o timer 0
-            mov     tl0, #low TMR ; recarga do byte menor
+ConfigT0:   mov     tl0, #low TMR ; recarga do byte menor
             mov     th0, #high TMR; recarga do byte maior
 
             ret
@@ -123,8 +124,7 @@ ConfigT0:   setb    tr0           ; liga o timer 0
 ; -----------------------------------------------------------------------------
 ; Configura o timer 1
 ; -----------------------------------------------------------------------------
-ConfigT1:   setb    tr1             ; liga o timer 1
-            mov     tl1, #low TMR1  ; recarga do byte menor
+ConfigT1:   mov     tl1, #low TMR1  ; recarga do byte menor
             mov     th1, #high TMR1 ; recarga do byte maior
 
             ret

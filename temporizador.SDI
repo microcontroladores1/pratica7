@@ -13,10 +13,10 @@
 0000,02 00 1E,,ljmp    _main
 ,,,
 ,,,org     000Bh
-000B,02 00 31,,ljmp    _tmr0
+000B,02 00 33,,ljmp    _tmr0
 ,,,
 ,,,org     001Bh
-001B,02 00 45,,ljmp    _tmr1
+001B,02 00 43,,ljmp    _tmr1
 ,,,
 ,,,; *****************************************************************************
 ,,,; EQUATES
@@ -36,18 +36,20 @@
 ,,,; Main
 ,,,; *****************************************************************************
 001E,7B 01,_main,_main:      mov     r3, #01       ; registrador que indica os minutos
-0020,7C 03,,            mov     r4, #03       ; registrador que indica os segundos
-0022,7D EC,,            mov     r5, #-20      ; valor de recarrega para segundos
+0020,7C 32,,            mov     r4, #50      ; registrador que indica os segundos
+0022,7D 00,,            mov     r5, #00     ; valor de recarrega para segundos
 ,,,
-0024,75 81 2F,,            mov     sp, #2fh      ; muda o stack pointer
+0024,11 B0,,            acall   Disable
 ,,,
-0027,11 56,,            acall   ConfTMR       ; configura os timers 0 e 1
+0026,75 81 2F,,            mov     sp, #2fh      ; muda o stack pointer
 ,,,
-0029,D2 AF,,            setb    ea            ; habilita interrupcoes
-002B,D2 A9,,            setb    et0           ; habilita interrupcao do timer 0
-002D,D2 AB,,            setb    et1           ; habilita interrupcao do timer 1
+0029,11 50,,            acall   ConfTMR       ; configura os timers 0 e 1
 ,,,
-002F,80 FE,,            sjmp    $             ; aguarda as interrupcoes
+002B,D2 AF,,            setb    ea            ; habilita interrupcoes
+002D,D2 A9,,            setb    et0           ; habilita interrupcao do timer 0
+002F,D2 AB,,            setb    et1           ; habilita interrupcao do timer 1
+,,,
+0031,80 FE,,            sjmp    $             ; aguarda as interrupcoes
 ,,,
 ,,,; *****************************************************************************
 ,,,; ISR
@@ -58,19 +60,18 @@
 ,,,; -----------------------------------------------------------------------------
 ,,,; Multiplexacao dos displays.
 ,,,; -----------------------------------------------------------------------------
-0031,B2 01,_tmr0,_tmr0:      cpl     F2
+0033,B2 01,_tmr0,_tmr0:      cpl     F2
 ,,,
-0033,20 01 04,,            jb      F2, _min        ; F2 == 1?
-0036,11 89,,            acall   MuxSec          ; nao: multiplexa os segundos
-0038,01 3C,,            ajmp    _exit2          ; sai da ISR
+0035,20 01 04,,            jb      F2, _min        ; F2 == 1?
+0038,11 83,,            acall   MuxSec          ; nao: multiplexa os segundos
+003A,01 3E,,            ajmp    _exit2          ; sai da ISR
 ,,,
-003A,11 70,_min,_min:       acall   MuxMin          ; multiplexa os minutos
+003C,11 6A,_min,_min:       acall   MuxMin          ; multiplexa os minutos
 ,,,
-003C,C2 8D,_exit2,_exit2:     clr     tf0             ; limpa a flag de overflow
-003E,75 8A 78,,            mov     tl0, #low TMR   ; recarrega o timer com o byte baixo
-0041,75 8C EC,,            mov     th0, #high TMR  ; recarrega o timer com o byte superior
+003E,C2 8D,_exit2,_exit2:     clr     tf0             ; limpa a flag de overflow
+0040,11 5C,,            acall   ConfigT0
 ,,,
-0044,32,,            reti                    ; retorna da ISR
+0042,32,,            reti                    ; retorna da ISR
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Timer 1
@@ -78,17 +79,15 @@
 ,,,; Contador de segundos.
 ,,,; - Registradores: r5
 ,,,; -----------------------------------------------------------------------------
-0045,0D,_tmr1,_tmr1:      inc     r5              ; incrementa r5
-0046,BD 00 04,,            cjne    r5, #0, _exit3  ; se ocorreu overflow, um segundo se passou
+0043,0D,_tmr1,_tmr1:      inc     r5               ; incrementa r5
+0044,BD 14 04,,            cjne    r5, #20, _exit3  ; se ocorreu overflow, um segundo se passou
 ,,,
-0049,11 BF,_sec,_sec:       acall   Second          ; chama rotina de segundo
-004B,7D EC,,            mov     r5, #-20        ; recarrega r5
+0047,11 B9,_sec,_sec:       acall   Second          ; chama rotina de segundo
+0049,7D 00,,            mov     r5, #00       ; recarrega r5
 ,,,
-004D,C2 8F,_exit3,_exit3:     clr     tf1
-004F,75 8B B0,,            mov     tl1, #low TMR1
-0052,75 8D 3C,,            mov     th1, #high TMR1
-,,,
-0055,32,,            reti
+004B,C2 8F,_exit3,_exit3:     clr     tf1
+004D,11 63,,            acall   ConfigT1
+004F,32,,            reti
 ,,,
 ,,,; *****************************************************************************
 ,,,; SUB-ROTINAS
@@ -101,33 +100,34 @@
 ,,,; - Usa: ConfigT0
 ,,,;        ConfigT1
 ,,,; -----------------------------------------------------------------------------
-0056,,ConfTMR,ConfTMR:
-0056,75 89 01,,            mov     tmod, #01h  ; timer 0 e 1 no modo 1
-0059,11 5E,,            acall   ConfigT0    ; configura timer 0
-005B,11 67,,            acall   ConfigT1    ; configura timer 1
+0050,,ConfTMR,ConfTMR:
+0050,75 89 01,,            mov     tmod, #01h  ; timer 0 e 1 no modo 1
+0053,D2 8C,,            setb    tr0         ; liga timer 0
+0055,D2 8E,,            setb    tr1         ; liga timer 1
 ,,,
-005D,22,,            ret
+0057,11 5C,,            acall   ConfigT0    ; configura timer 0
+0059,11 63,,            acall   ConfigT1    ; configura timer 1
+,,,
+005B,22,,            ret
 ,,,; -----------------------------------------------------------------------------
 ,,,; ConfigT0
 ,,,; -----------------------------------------------------------------------------
 ,,,; Configura o timer 0
 ,,,; -----------------------------------------------------------------------------
-005E,D2 8C,ConfigT0,ConfigT0:   setb    tr0           ; liga o timer 0
-0060,75 8A 78,,            mov     tl0, #low TMR ; recarga do byte menor
-0063,75 8C EC,,            mov     th0, #high TMR; recarga do byte maior
+005C,75 8A 78,ConfigT0,ConfigT0:   mov     tl0, #low TMR ; recarga do byte menor
+005F,75 8C EC,,            mov     th0, #high TMR; recarga do byte maior
 ,,,
-0066,22,,            ret
+0062,22,,            ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; ConfigT1
 ,,,; -----------------------------------------------------------------------------
 ,,,; Configura o timer 1
 ,,,; -----------------------------------------------------------------------------
-0067,D2 8E,ConfigT1,ConfigT1:   setb    tr1             ; liga o timer 1
-0069,75 8B B0,,            mov     tl1, #low TMR1  ; recarga do byte menor
-006C,75 8D 3C,,            mov     th1, #high TMR1 ; recarga do byte maior
+0063,75 8B B0,ConfigT1,ConfigT1:   mov     tl1, #low TMR1  ; recarga do byte menor
+0066,75 8D 3C,,            mov     th1, #high TMR1 ; recarga do byte maior
 ,,,
-006F,22,,            ret
+0069,22,,            ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; MuxMin
@@ -136,23 +136,23 @@
 ,,,; - Registradores: R3
 ,,,; - Usa: Display
 ,,,; -----------------------------------------------------------------------------
-0070,B2 D5,MuxMin,MuxMin:     cpl     f0          ; complementa flag de controle
-0072,11 B6,,            acall   Disable
+006A,B2 D5,MuxMin,MuxMin:     cpl     f0          ; complementa flag de controle
+006C,11 B0,,            acall   Disable
 ,,,
-0074,EB,,            mov     a, r3       ; a <- r3
-0075,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
-0078,84,,            div     ab          ; a <- dezenas | b <- unidade
+006E,EB,,            mov     a, r3       ; a <- r3
+006F,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
+0072,84,,            div     ab          ; a <- dezenas | b <- unidade
 ,,,
-0079,20 D5 08,,            jb      f0, _disp1  ; f0 == 1?
-007C,D2 B5,,            setb    D2          ; nao: Habilita d2
-007E,E5 F0,,            mov     a, b        ; acc <- b para botar no display
-0080,11 B1,,            acall   Display     ; imprime o valor do acc
-0082,01 88,,            ajmp    _exit       ; sai da rotina
+0073,20 D5 08,,            jb      f0, _disp1  ; f0 == 1?
+0076,D2 B5,,            setb    D2          ; nao: Habilita d2
+0078,E5 F0,,            mov     a, b        ; acc <- b para botar no display
+007A,11 AB,,            acall   Display     ; imprime o valor do acc
+007C,01 82,,            ajmp    _exit       ; sai da rotina
 ,,,
-0084,D2 B4,_disp1,_disp1:     setb    D1          ; habilita d1
-0086,11 B1,,            acall   Display     ; imprime o valor do acc
+007E,D2 B4,_disp1,_disp1:     setb    D1          ; habilita d1
+0080,11 AB,,            acall   Display     ; imprime o valor do acc
 ,,,
-0088,22,_exit,_exit:      ret
+0082,22,_exit,_exit:      ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; MuxSec
@@ -161,23 +161,23 @@
 ,,,; - Registradores: R4
 ,,,; - Usa: Display
 ,,,; -----------------------------------------------------------------------------
-0089,B2 00,MuxSec,MuxSec:     cpl     F1          ; complementa flag de controle
-008B,11 B6,,            acall   Disable
+0083,B2 00,MuxSec,MuxSec:     cpl     F1          ; complementa flag de controle
+0085,11 B0,,            acall   Disable
 ,,,
-008D,EC,,            mov     a, r4       ; a <- r4
-008E,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
-0091,84,,            div     ab          ; a <- dezena | b <- unidade
+0087,EC,,            mov     a, r4       ; a <- r4
+0088,75 F0 0A,,            mov     b, #10      ; prepara para separar unidade e dezena
+008B,84,,            div     ab          ; a <- dezena | b <- unidade
 ,,,
-0092,20 00 08,,            jb      F1, _disp3  ; F1 == 1?
-0095,D2 B7,,            setb    D4          ; nao: habilita d4
-0097,E5 F0,,            mov     a, b        ; acc <- b para botar no display
-0099,11 B1,,            acall   Display     ; imprime o valor do acc
-009B,01 A1,,            ajmp    _exit1      ; sai da rotina
+008C,20 00 08,,            jb      F1, _disp3  ; F1 == 1?
+008F,D2 B7,,            setb    D4          ; nao: habilita d4
+0091,E5 F0,,            mov     a, b        ; acc <- b para botar no display
+0093,11 AB,,            acall   Display     ; imprime o valor do acc
+0095,01 9B,,            ajmp    _exit1      ; sai da rotina
 ,,,
-009D,D2 B6,_disp3,_disp3:     setb    D3          ; habilita d3
-009F,11 B1,,            acall   Display     ; imprime o valor do acc
+0097,D2 B6,_disp3,_disp3:     setb    D3          ; habilita d3
+0099,11 AB,,            acall   Display     ; imprime o valor do acc
 ,,,
-00A1,22,_exit1,_exit1:     ret
+009B,22,_exit1,_exit1:     ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; LKDisp
@@ -185,11 +185,11 @@
 ,,,; Decodifica o digito do ACC para o display de 7 segmentos. Retorna com
 ,,,; o valor no ACC.
 ,,,; -----------------------------------------------------------------------------
-00A2,90 00 A7,LKDisp,LKDisp:     mov     dptr, #TABELA
-00A5,93,,            movc    a, @a+dptr
-00A6,22,,            ret
+009C,90 00 A1,LKDisp,LKDisp:     mov     dptr, #TABELA
+009F,93,,            movc    a, @a+dptr
+00A0,22,,            ret
 ,,,
-00A7,C0 F9 A4 B0,TABELA,TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
+00A1,C0 F9 A4 B0,TABELA,TABELA: db  0C0h,0F9h,0A4h,0B0h,99h,92h,82h,0F8h,80h,90h
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Display
@@ -197,49 +197,49 @@
 ,,,; Imprime num display o digito no acumulador.
 ,,,; - Usa: LKDisp
 ,,,; -----------------------------------------------------------------------------
-00B1,11 A2,Display,Display:    acall   LKDisp
-00B3,F5 A0,,            mov     DISP, a
-00B5,22,,            ret
+00AB,11 9C,Display,Display:    acall   LKDisp
+00AD,F5 A0,,            mov     DISP, a
+00AF,22,,            ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Disable
 ,,,; -----------------------------------------------------------------------------
 ,,,; Desabilita todos os displays
 ,,,; -----------------------------------------------------------------------------
-00B6,C2 B4,Disable,Disable:    clr    D1
-00B8,C2 B5,,            clr    D2
-00BA,C2 B6,,            clr    D3
-00BC,C2 B7,,            clr    D4
+00B0,C2 B4,Disable,Disable:    clr    D1
+00B2,C2 B5,,            clr    D2
+00B4,C2 B6,,            clr    D3
+00B6,C2 B7,,            clr    D4
 ,,,
-00BE,22,,            ret
+00B8,22,,            ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Second
 ,,,; -----------------------------------------------------------------------------
 ,,,; Chamada a cada um segundo
 ,,,; -----------------------------------------------------------------------------
-00BF,1C,Second,Second:     dec     r4
-00C0,BC FF 10,,            cjne    r4, #0FFh, _exit4   ; ocorreu underflow?
+00B9,1C,Second,Second:     dec     r4
+00BA,BC FF 10,,            cjne    r4, #0FFh, _exit4   ; ocorreu underflow?
 ,,,
-00C3,1B,,            dec     r3                  ; sim: decrementa os minutos
-00C4,BB FF 0A,,            cjne    r3, #0FFh, _label   ; ocorreu underflow nos minutos?
+00BD,1B,,            dec     r3                  ; sim: decrementa os minutos
+00BE,BB FF 0A,,            cjne    r3, #0FFh, _label   ; ocorreu underflow nos minutos?
 ,,,
-00C7,C2 8E,,            clr     tr1                 ; sim: para o timer 1
-00C9,7B 00,,            mov     r3, #0              ; zera os minutos
-00CB,7C 00,,            mov     r4, #0              ; zera os segundos
-00CD,11 D4,,            acall   Break               ; Timer finalizado.
-00CF,01 D3,,            ajmp    _exit4              ; sai da rotina
+00C1,C2 8E,,            clr     tr1                 ; sim: para o timer 1
+00C3,7B 00,,            mov     r3, #0              ; zera os minutos
+00C5,7C 00,,            mov     r4, #0              ; zera os segundos
+00C7,11 CE,,            acall   Break               ; Timer finalizado.
+00C9,01 CD,,            ajmp    _exit4              ; sai da rotina
 ,,,
-00D1,7C 3B,_label,_label:     mov     r4, #59
-00D3,22,_exit4,_exit4:     ret
+00CB,7C 3B,_label,_label:     mov     r4, #59
+00CD,22,_exit4,_exit4:     ret
 ,,,
 ,,,; -----------------------------------------------------------------------------
 ,,,; Break
 ,,,; -----------------------------------------------------------------------------
 ,,,; Rotina a ser chamada quando a contagem finaliza.
 ,,,; -----------------------------------------------------------------------------
-00D4,,Break,Break:
-00D4,22,,            ret
+00CE,,Break,Break:
+00CE,22,,            ret
 ,,,
 ,,,; *****************************************************************************
 000E,,,            end
