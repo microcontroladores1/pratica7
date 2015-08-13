@@ -144,12 +144,12 @@
 0078,84,,            div     ab          ; a <- dezenas | b <- unidade
 ,,,
 0079,20 D5 08,,            jb      f0, _disp1  ; f0 == 1?
-007C,C2 B5,,            clr     D2          ; nao: Habilita d2
+007C,D2 B5,,            setb    D2          ; nao: Habilita d2
 007E,E5 F0,,            mov     a, b        ; acc <- b para botar no display
 0080,11 B1,,            acall   Display     ; imprime o valor do acc
 0082,01 88,,            ajmp    _exit       ; sai da rotina
 ,,,
-0084,C2 B4,_disp1,_disp1:     clr     D1          ; habilita d1
+0084,D2 B4,_disp1,_disp1:     setb    D1          ; habilita d1
 0086,11 B1,,            acall   Display     ; imprime o valor do acc
 ,,,
 0088,22,_exit,_exit:      ret
@@ -169,12 +169,12 @@
 0091,84,,            div     ab          ; a <- dezena | b <- unidade
 ,,,
 0092,20 00 08,,            jb      F1, _disp3  ; F1 == 1?
-0095,C2 B7,,            clr     D4          ; nao: habilita d4
+0095,D2 B7,,            setb    D4          ; nao: habilita d4
 0097,E5 F0,,            mov     a, b        ; acc <- b para botar no display
 0099,11 B1,,            acall   Display     ; imprime o valor do acc
 009B,01 A1,,            ajmp    _exit1      ; sai da rotina
 ,,,
-009D,C2 B6,_disp3,_disp3:     clr     D3          ; habilita d3
+009D,D2 B6,_disp3,_disp3:     setb    D3          ; habilita d3
 009F,11 B1,,            acall   Display     ; imprime o valor do acc
 ,,,
 00A1,22,_exit1,_exit1:     ret
@@ -206,10 +206,10 @@
 ,,,; -----------------------------------------------------------------------------
 ,,,; Desabilita todos os displays
 ,,,; -----------------------------------------------------------------------------
-00B6,D2 B4,Disable,Disable:    setb    D1
-00B8,D2 B5,,            setb    D2
-00BA,D2 B6,,            setb    D3
-00BC,D2 B7,,            setb    D4
+00B6,C2 B4,Disable,Disable:    clr    D1
+00B8,C2 B5,,            clr    D2
+00BA,C2 B6,,            clr    D3
+00BC,C2 B7,,            clr    D4
 ,,,
 00BE,22,,            ret
 ,,,

@@ -178,12 +178,12 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
   144:	  0078	84		            div     ab          ; a <- dezenas | b <- unidade
   145:
   146:	  0079	20 D5 08	            jb      f0, _disp1  ; f0 == 1?
-  147:	  007C	C2 B5		            clr     D2          ; nao: Habilita d2
+  147:	  007C	D2 B5		            setb    D2          ; nao: Habilita d2
   148:	  007E	E5 F0		            mov     a, b        ; acc <- b para botar no display
   149:	  0080	11 B1		            acall   Display     ; imprime o valor do acc
   150:	  0082	01 88		            ajmp    _exit       ; sai da rotina
   151:
-  152:	  0084	C2 B4		_disp1:     clr     D1          ; habilita d1
+  152:	  0084	D2 B4		_disp1:     setb    D1          ; habilita d1
   153:	  0086	11 B1		            acall   Display     ; imprime o valor do acc
   154:
   155:	  0088	22		_exit:      ret
@@ -210,12 +210,12 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
   169:	  0091	84		            div     ab          ; a <- dezena | b <- unidade
   170:
   171:	  0092	20 00 08	            jb      F1, _disp3  ; F1 == 1?
-  172:	  0095	C2 B7		            clr     D4          ; nao: habilita d4
+  172:	  0095	D2 B7		            setb    D4          ; nao: habilita d4
   173:	  0097	E5 F0		            mov     a, b        ; acc <- b para botar no display
   174:	  0099	11 B1		            acall   Display     ; imprime o valor do acc
   175:	  009B	01 A1		            ajmp    _exit1      ; sai da rotina
   176:
-  177:	  009D	C2 B6		_disp3:     clr     D3          ; habilita d3
+  177:	  009D	D2 B6		_disp3:     setb    D3          ; habilita d3
   178:	  009F	11 B1		            acall   Display     ; imprime o valor do acc
   179:
   180:	  00A1	22		_exit1:     ret
@@ -249,7 +249,7 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
   206:				; -----------------------------------------------------------------------------
   207:				; Desabilita todos os displays
   208:				; -----------------------------------------------------------------------------
-  209:	  00B6	D2 B4		Disable:    setb    D1
+  209:	  00B6	C2 B4		Disable:    clr    D1
 
 ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. Heinz                                         PAGE 5
 
@@ -257,9 +257,9 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
 
  Line  I  Addr  Code            Source
 
-  210:	  00B8	D2 B5		            setb    D2
-  211:	  00BA	D2 B6		            setb    D3
-  212:	  00BC	D2 B7		            setb    D4
+  210:	  00B8	C2 B5		            clr    D2
+  211:	  00BA	C2 B6		            clr    D3
+  212:	  00BC	C2 B7		            clr    D4
   213:
   214:	  00BE	22		            ret
   215:

@@ -144,12 +144,12 @@ MuxMin:     cpl     f0          ; complementa flag de controle
             div     ab          ; a <- dezenas | b <- unidade
             
             jb      f0, _disp1  ; f0 == 1?
-            clr     D2          ; nao: Habilita d2
+            setb    D2          ; nao: Habilita d2
             mov     a, b        ; acc <- b para botar no display
             acall   Display     ; imprime o valor do acc
             ajmp    _exit       ; sai da rotina
 
-_disp1:     clr     D1          ; habilita d1
+_disp1:     setb    D1          ; habilita d1
             acall   Display     ; imprime o valor do acc
 
 _exit:      ret
@@ -169,12 +169,12 @@ MuxSec:     cpl     F1          ; complementa flag de controle
             div     ab          ; a <- dezena | b <- unidade
 
             jb      F1, _disp3  ; F1 == 1?
-            clr     D4          ; nao: habilita d4
+            setb    D4          ; nao: habilita d4
             mov     a, b        ; acc <- b para botar no display
             acall   Display     ; imprime o valor do acc
             ajmp    _exit1      ; sai da rotina
 
-_disp3:     clr     D3          ; habilita d3
+_disp3:     setb    D3          ; habilita d3
             acall   Display     ; imprime o valor do acc
 
 _exit1:     ret
@@ -206,10 +206,10 @@ Display:    acall   LKDisp
 ; -----------------------------------------------------------------------------
 ; Desabilita todos os displays
 ; -----------------------------------------------------------------------------
-Disable:    setb    D1
-            setb    D2
-            setb    D3
-            setb    D4
+Disable:    clr    D1
+            clr    D2
+            clr    D3
+            clr    D4
 
             ret
 
