@@ -27,7 +27,7 @@ D2      equ     p3.5    ; habilita display 2
 D3      equ     p3.6    ; habilita display 3
 D4      equ     p3.7    ; habilita display 4
 TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
-TMR1    equ     15536  ; Prepara para contagem de 50000us (0.05s)
+TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
 
 F1      bit     00h
 F2      bit     01h

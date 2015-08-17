@@ -47,7 +47,7 @@ ASEM-51 V1.3                                         Copyright (c) 2002 by W.W. 
    27:		B      00B6	D3      equ     p3.6    ; habilita display 3
    28:		B      00B7	D4      equ     p3.7    ; habilita display 4
    29:		N      EC78	TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
-   30:		N      3CB0	TMR1    equ     15536  ; Prepara para contagem de 50000us (0.05s)
+   30:		N      3CB0	TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
    31:
    32:		N	 00	F1      bit     00h
    33:		N	 01	F2      bit     01h
