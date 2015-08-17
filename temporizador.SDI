@@ -22,24 +22,29 @@
 ,,,; EQUATES
 ,,,; *****************************************************************************
 000D,,,DISP    equ     p2      ; porta do display
+000B,,,LOAD    equ     p0.0    ; pino onde vai ficar o acionamento da carga.
+,,,
 000B,,,D1      equ     p3.4    ; habilita display 1
 000B,,,D2      equ     p3.5    ; habilita display 2
 000B,,,D3      equ     p3.6    ; habilita display 3
 000B,,,D4      equ     p3.7    ; habilita display 4
+,,,
+,,,
 ,,,TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
 ,,,TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
 ,,,
-,,,F1      bit     00h
-,,,F2      bit     01h
+,,,F1      bit     00h     ; flag para mux de segundos
+,,,F2      bit     01h     ; flag para mux de minutos
 ,,,
 ,,,; *****************************************************************************
 ,,,; Main
 ,,,; *****************************************************************************
-001E,7B 01,_main,_main:      mov     r3, #01       ; registrador que indica os minutos
-0020,7C 32,,            mov     r4, #50      ; registrador que indica os segundos
-0022,7D 00,,            mov     r5, #00     ; valor de recarrega para segundos
+001E,7B 00,_main,_main:      mov     r3, #00       ; registrador que indica os minutos
+0020,7C 0A,,            mov     r4, #10       ; registrador que indica os segundos
 ,,,
-0024,11 B0,,            acall   Disable
+0022,7D 00,,            mov     r5, #00       ; valor de recarrega para segundos
+,,,
+0024,11 B0,,            acall   Disable       ; desabilita todos os displays
 ,,,
 0026,75 81 2F,,            mov     sp, #2fh      ; muda o stack pointer
 ,,,
@@ -101,7 +106,7 @@
 ,,,;        ConfigT1
 ,,,; -----------------------------------------------------------------------------
 0050,,ConfTMR,ConfTMR:
-0050,75 89 01,,            mov     tmod, #01h  ; timer 0 e 1 no modo 1
+0050,75 89 11,,            mov     tmod, #11h  ; timer 0 e 1 no modo 1
 0053,D2 8C,,            setb    tr0         ; liga timer 0
 0055,D2 8E,,            setb    tr1         ; liga timer 1
 ,,,
@@ -238,8 +243,8 @@
 ,,,; -----------------------------------------------------------------------------
 ,,,; Rotina a ser chamada quando a contagem finaliza.
 ,,,; -----------------------------------------------------------------------------
-00CE,,Break,Break:
-00CE,22,,            ret
+00CE,B2 80,Break,Break:      cpl     LOAD    ; aciona a carga
+00D0,22,,            ret
 ,,,
 ,,,; *****************************************************************************
 000E,,,            end

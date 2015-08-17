@@ -22,24 +22,29 @@ ljmp    _tmr1
 ; EQUATES
 ; *****************************************************************************
 DISP    equ     p2      ; porta do display
+LOAD    equ     p0.0    ; pino onde vai ficar o acionamento da carga.
+
 D1      equ     p3.4    ; habilita display 1
 D2      equ     p3.5    ; habilita display 2
 D3      equ     p3.6    ; habilita display 3
 D4      equ     p3.7    ; habilita display 4
+
+
 TMR     equ     -5000   ; frequencia de multiplexacao = 200Hz (correto = 5000)
 TMR1    equ     -50000  ; Prepara para contagem de 50000us (0.05s)
 
-F1      bit     00h
-F2      bit     01h
+F1      bit     00h     ; flag para mux de segundos
+F2      bit     01h     ; flag para mux de minutos
 
 ; *****************************************************************************
 ; Main
 ; *****************************************************************************
-_main:      mov     r3, #20       ; registrador que indica os minutos
-            mov     r4, #00      ; registrador que indica os segundos
-            mov     r5, #00     ; valor de recarrega para segundos
+_main:      mov     r3, #00       ; registrador que indica os minutos
+            mov     r4, #03       ; registrador que indica os segundos
 
-            acall   Disable
+            mov     r5, #00       ; valor de recarrega para segundos
+
+            acall   Disable       ; desabilita todos os displays
 
             mov     sp, #2fh      ; muda o stack pointer
 
@@ -222,6 +227,7 @@ Second:     dec     r4
             cjne    r4, #0FFh, _exit4   ; ocorreu underflow?
 
             dec     r3                  ; sim: decrementa os minutos
+
             cjne    r3, #0FFh, _label   ; ocorreu underflow nos minutos?
 
             clr     tr1                 ; sim: para o timer 1
@@ -238,7 +244,7 @@ _exit4:     ret
 ; -----------------------------------------------------------------------------
 ; Rotina a ser chamada quando a contagem finaliza.
 ; -----------------------------------------------------------------------------
-Break:      
+Break:      cpl     LOAD    ; aciona a carga
             ret
 
 ; *****************************************************************************
